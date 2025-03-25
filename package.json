@@ -1,7 +1,7 @@
 {
     "name": "git-stash-remote",
     "description": "Easily transfer stashes through the git remote.",
-    "version": "0.0.0",
+    "version": "0.0.1",
     "author": "Ian Hornik",
     "bin": "./bin/run.js",
     "bugs": "https://github.com/yiliansource/git-stash-remote/issues",
