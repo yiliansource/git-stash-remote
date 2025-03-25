@@ -53,3 +53,4 @@ export default class Push extends Command {
 
 // this is a test!
 // this is another test!
+// this is a third test!
