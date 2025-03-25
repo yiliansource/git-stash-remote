@@ -50,6 +50,3 @@ export default class Push extends Command {
         this.log(`all done!`);
     }
 }
-
-// this is a test!
-// this is another test!
