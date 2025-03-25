@@ -10,7 +10,10 @@
         "@oclif/core": "^4",
         "@oclif/plugin-help": "^6",
         "@oclif/plugin-plugins": "^5",
-        "date-fns": "^4.1.0"
+        "date-fns": "^4.1.0",
+        "nano-spawn": "^0.2.0",
+        "ora": "^8.2.0",
+        "terminal-link": "^3.0.0"
     },
     "devDependencies": {
         "@eslint/compat": "^1",
@@ -52,6 +55,9 @@
         "plugins": [
             "@oclif/plugin-help"
         ],
+        "hooks": {
+            "prerun": "./dist/hooks/prerun"
+        },
         "topicSeparator": " "
     },
     "repository": "yiliansource/git-stash-remote",

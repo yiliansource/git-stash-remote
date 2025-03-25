@@ -1,3 +1,4 @@
+import spawn from "nano-spawn";
 import { execSync } from "node:child_process";
 
 export function getRemoteStashIds(): string[] {
@@ -14,12 +15,14 @@ export function getRemoteStashIds(): string[] {
     }
 }
 
-export function hasUncommittedChanges(): boolean {
+export async function hasUncommittedChanges(): Promise<boolean> {
     try {
-        const status = execSync("git status --porcelain", { encoding: "utf8" }).trim();
-        return status.length > 0; // Non-empty output means there are uncommitted changes
-    } catch (error) {
-        console.error("Error checking for uncommitted changes:", error);
+        const result = await spawn("git", ["status", "--porcelain"]).catch(() => {
+            // eslint-disable-next-line unicorn/error-message
+            throw new Error();
+        });
+        return result.output.trim().length > 0;
+    } catch {
         return false;
     }
 }
@@ -31,5 +34,17 @@ export function getCurrentBranch(): null | string {
     } catch (error) {
         console.error("Error getting current branch:", error);
         return null;
+    }
+}
+
+export async function isGitRepo(cwd: string = process.cwd()): Promise<boolean> {
+    try {
+        await spawn("git", ["rev-parse", "--is-inside-work-tree"], { cwd, stdio: "ignore" }).catch(() => {
+            // eslint-disable-next-line unicorn/error-message
+            throw new Error();
+        });
+        return true;
+    } catch {
+        return false;
     }
 }

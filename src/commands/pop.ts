@@ -9,16 +9,9 @@ export default class Pop extends Command {
         stashId: Args.string({ description: "The desired stash ID." }),
     };
     static override description = "Pushes the current changes the a remote stash.";
-    // static override examples = ["<%= config.bin %> <%= command.id %>"];
-    // static override flags = {
-    //     // flag with no value (-f, --force)
-    //     force: Flags.boolean({ char: "f" }),
-    //     // flag with a value (-n, --name=VALUE)
-    //     name: Flags.string({ char: "n", description: "name to print" }),
-    // };
 
     public async run(): Promise<void> {
-        const dirty = hasUncommittedChanges();
+        const dirty = await hasUncommittedChanges();
         if (dirty) {
             this.log("cannot pop stash while repository is dirty");
             return;
