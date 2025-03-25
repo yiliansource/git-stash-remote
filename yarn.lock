@@ -4760,6 +4760,7 @@ __metadata:
     eslint-config-oclif: "npm:^6"
     eslint-config-prettier: "npm:^10"
     mocha: "npm:^10"
+    nano-spawn: "npm:^0.2.0"
     oclif: "npm:^4"
     prettier: "npm:^3.5.3"
     shx: "npm:^0.3.3"
@@ -6248,6 +6249,13 @@ __metadata:
   version: 2.0.0
   resolution: "mute-stream@npm:2.0.0"
   checksum: 10c0/2cf48a2087175c60c8dcdbc619908b49c07f7adcfc37d29236b0c5c612d6204f789104c98cc44d38acab7b3c96f4a3ec2cfdc4934d0738d876dbefa2a12c69f4
+  languageName: node
+  linkType: hard
+
+"nano-spawn@npm:^0.2.0":
+  version: 0.2.0
+  resolution: "nano-spawn@npm:0.2.0"
+  checksum: 10c0/16a4dfa3aa742a00ff834ba7352e01618d01bb6029517d7641146f552342d53006e09432bd0bf70e6f2b9094e17220de4d274d4b5ee23e052c6e3de5c31a0e01
   languageName: node
   linkType: hard
 

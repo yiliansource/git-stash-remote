@@ -1,35 +1,57 @@
-import { execSync } from "node:child_process";
+import spawn from "nano-spawn";
 
-export function getRemoteStashIds(): string[] {
+import { STASH_GROUP_KEY } from "./paths.js";
+
+export async function getRemoteStashIds(): Promise<string[]> {
     try {
-        const result = execSync("git branch -r", { encoding: "utf8" });
-        return result
+        const result = await spawn("git", ["branch", "-r"]).catch(() => {
+            throw new Error("unable to fetch remote branches");
+        });
+
+        const prefix = "origin/" + STASH_GROUP_KEY + "/";
+        return result.output
             .split("\n")
             .map((branch) => branch.trim())
-            .filter((branch) => branch.startsWith("origin/sync/"))
-            .map((branch) => branch.slice("origin/sync/".length));
-    } catch (error) {
-        console.error("Error fetching branches:", error);
+            .filter((branch) => branch.startsWith(prefix))
+            .map((branch) => branch.slice(prefix.length))
+            .sort();
+    } catch {
         return [];
     }
 }
 
-export function hasUncommittedChanges(): boolean {
+export async function hasUncommittedChanges(): Promise<boolean> {
     try {
-        const status = execSync("git status --porcelain", { encoding: "utf8" }).trim();
-        return status.length > 0; // Non-empty output means there are uncommitted changes
-    } catch (error) {
-        console.error("Error checking for uncommitted changes:", error);
+        const result = await spawn("git", ["status", "--porcelain"]).catch(() => {
+            throw new Error("unable to fetch git status");
+        });
+
+        return result.output.trim().length > 0;
+    } catch {
         return false;
     }
 }
 
-export function getCurrentBranch(): null | string {
+export async function getCurrentBranch(): Promise<null | string> {
     try {
-        const branch = execSync("git rev-parse --abbrev-ref HEAD", { encoding: "utf8" }).trim();
-        return branch;
-    } catch (error) {
-        console.error("Error getting current branch:", error);
+        const result = await spawn("git", ["rev-parse", "--abbrev-ref", "HEAD"]).catch(() => {
+            throw new Error("unable to fetch current branch");
+        });
+
+        return result.output;
+    } catch {
         return null;
+    }
+}
+
+export async function isGitRepo(cwd: string = process.cwd()): Promise<boolean> {
+    try {
+        await spawn("git", ["rev-parse", "--is-inside-work-tree"], { cwd }).catch(() => {
+            throw new Error("unable to fetch git status");
+        });
+
+        return true;
+    } catch {
+        return false;
     }
 }

@@ -1,37 +1,29 @@
 import { select } from "@inquirer/prompts";
 import { Args, Command } from "@oclif/core";
-import { execSync } from "node:child_process";
+import spawn from "nano-spawn";
 
 import { getRemoteStashIds, hasUncommittedChanges } from "../util/git.js";
+import { getStashBranch } from "../util/paths.js";
 
 export default class Pop extends Command {
     static override args = {
         stashId: Args.string({ description: "The desired stash ID." }),
     };
     static override description = "Pushes the current changes the a remote stash.";
-    // static override examples = ["<%= config.bin %> <%= command.id %>"];
-    // static override flags = {
-    //     // flag with no value (-f, --force)
-    //     force: Flags.boolean({ char: "f" }),
-    //     // flag with a value (-n, --name=VALUE)
-    //     name: Flags.string({ char: "n", description: "name to print" }),
-    // };
 
     public async run(): Promise<void> {
-        const dirty = hasUncommittedChanges();
+        const dirty = await hasUncommittedChanges();
         if (dirty) {
-            this.log("cannot pop stash while repository is dirty");
-            return;
+            this.error("cannot pop stash while repository is dirty");
         }
 
         const { args } = await this.parse(Pop);
 
         let { stashId } = args;
         if (!stashId) {
-            const stashIds = getRemoteStashIds();
+            const stashIds = await getRemoteStashIds();
             if (stashIds.length === 0) {
-                this.log("no remote stashes found.");
-                return;
+                this.error("no remote stashes found.");
             }
 
             stashId = await select({
@@ -42,14 +34,17 @@ export default class Pop extends Command {
             });
         }
 
-        const branch = `sync/${stashId}`;
+        const stashBranch = getStashBranch(stashId);
 
-        this.log(`fetching remote ${branch}`);
-        execSync(`git fetch origin ${branch}"`, { stdio: "pipe" });
-        this.log(`merge`);
-        execSync(`git merge --no-commit --no-ff origin/${branch}`, { stdio: "pipe" });
+        this.log(`fetching remote ${stashBranch}`);
+        await spawn(`git`, [`fetch`, `origin`, stashBranch]);
+
+        this.log(`merge changes`);
+        await spawn(`git`, [`merge`, `--no-commit`, `--no-ff`, `origin/${stashBranch}`]);
+
         this.log(`deleting remote stash`);
-        execSync(`git push origin --delete ${branch}`, { stdio: "pipe" });
-        this.log(`done`);
+        await spawn(`git`, [`push`, `origin`, `--delete`, stashBranch]);
+
+        this.log(`all done!`);
     }
 }

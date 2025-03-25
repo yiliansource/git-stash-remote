@@ -1,28 +1,21 @@
 import { input } from "@inquirer/prompts";
 import { Args, Command } from "@oclif/core";
 import { format } from "date-fns";
-import { execSync } from "node:child_process";
+import spawn from "nano-spawn";
 
 import { getCurrentBranch, hasUncommittedChanges } from "../util/git.js";
+import { getStashBranch } from "../util/paths.js";
 
 export default class Push extends Command {
     static override args = {
         stashId: Args.string({ description: "The desired stash ID." }),
     };
     static override description = "Pushes the current changes the a remote stash.";
-    // static override examples = ["<%= config.bin %> <%= command.id %>"];
-    // static override flags = {
-    //     // flag with no value (-f, --force)
-    //     force: Flags.boolean({ char: "f" }),
-    //     // flag with a value (-n, --name=VALUE)
-    //     name: Flags.string({ char: "n", description: "name to print" }),
-    // };
 
     public async run(): Promise<void> {
-        const dirty = hasUncommittedChanges();
+        const dirty = await hasUncommittedChanges();
         if (!dirty) {
-            this.log("cannot push stash without changes");
-            return;
+            this.error("cannot push stash without changes");
         }
 
         const { args } = await this.parse(Push);
@@ -35,19 +28,28 @@ export default class Push extends Command {
             });
         }
 
-        const currentBranch = getCurrentBranch();
-        const stashBranch = `sync/${stashId}`;
+        const currentBranch = await getCurrentBranch();
+        const stashBranch = getStashBranch(stashId);
 
         this.log(`checking out local ${stashBranch}`);
-        execSync(`git checkout -b ${stashBranch}"`, { stdio: "pipe" });
+        await spawn(`git`, [`checkout`, `-b`, stashBranch]);
+
         this.log(`adding changes`);
-        execSync(`git add . && git commit -m "wip"`, { stdio: "pipe" });
-        this.log(`pushing`);
-        execSync(`git push origin ${stashBranch}`, { stdio: "pipe" });
+        await spawn(`git`, [`add`, `.`]);
+        await spawn(`git`, [`commit`, `-m`, `"git-remote-stash"`]);
+
+        this.log(`pushing to remote stash`);
+        await spawn(`git`, [`push`, `origin`, stashBranch]);
+
         this.log(`switching to old branch`);
-        execSync(`git checkout ${currentBranch}`);
-        this.log(`deleting stash branch`);
-        execSync(`git branch -D ${stashBranch}`);
-        this.log(`done`);
+        await spawn(`git`, [`checkout`, currentBranch!]);
+
+        this.log(`deleting local stash branch`);
+        await spawn(`git`, [`branch`, `-D`, stashBranch]);
+
+        this.log(`all done!`);
     }
 }
+
+// this is a test!
+// this is another test!
