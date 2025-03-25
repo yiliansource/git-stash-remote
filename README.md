@@ -4,7 +4,7 @@
 
 `git-stash-remote` is a tool to stash your changes on the git remote. This can be useful when you need to switch workstations without creating an actual commit, to prevent commiting unfinished work to keep branches clean.
 
-The changes are pushed to `stash/[id]` branches and are deleted once popped.
+The changes are pushed to `stash/[id]` branches. **Note that the stash will be deleted from the local instance after pushing, and will be deleted from the remote instance after popping.**
 
 ## Installation
 
