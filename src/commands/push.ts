@@ -3,6 +3,8 @@ import { Args, Command } from "@oclif/core";
 import { format } from "date-fns";
 import { execSync } from "node:child_process";
 
+import { getCurrentBranch, hasUncommittedChanges } from "../util/git.js";
+
 export default class Push extends Command {
     static override args = {
         stashId: Args.string({ description: "The desired stash ID." }),
@@ -17,22 +19,35 @@ export default class Push extends Command {
     // };
 
     public async run(): Promise<void> {
+        const dirty = hasUncommittedChanges();
+        if (!dirty) {
+            this.log("cannot push stash without changes");
+            return;
+        }
+
         const { args } = await this.parse(Push);
 
         let { stashId } = args;
         if (!stashId) {
             stashId = await input({
-                default: format(new Date(), "yyyy-MM-dd"),
+                default: format(new Date(), "yyyy-MM-dd-HH-mm"),
                 message: "Enter the desired stash ID:",
             });
         }
 
-        const branch = `sync/${stashId}`;
+        const currentBranch = getCurrentBranch();
+        const stashBranch = `sync/${stashId}`;
 
-        execSync(`git stash push -m "wip"`);
-        execSync(`git stash branch ${branch}`);
-        execSync(`git push origin ${branch}`);
-
-        this.log(stashId);
+        this.log(`checking out local ${stashBranch}`);
+        execSync(`git checkout -b ${stashBranch}"`, { stdio: "pipe" });
+        this.log(`adding changes`);
+        execSync(`git add . && git commit -m "wip"`, { stdio: "pipe" });
+        this.log(`pushing`);
+        execSync(`git push origin ${stashBranch}`, { stdio: "pipe" });
+        this.log(`switching to old branch`);
+        execSync(`git checkout ${currentBranch}`);
+        this.log(`deleting stash branch`);
+        execSync(`git branch -D ${stashBranch}`);
+        this.log(`done`);
     }
 }
